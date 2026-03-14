@@ -1,1 +1,30 @@
 start$
+team_join$0$fef$dsfe$fw$fdw
+team_join$1$fsdfsf$efv$eve$wd2
+teams_complete
+attack$0$1$1$0$FC/AP
+attack$0$1$1$0$FC/AP
+attack$0$1$1$0$FC/AP
+attack$0$1$1$0$FC/AP
+attack$0$1$1$1$FC/AP
+attack$0$1$1$1$FC/AP
+attack$0$1$1$2$FC/AP
+attack$0$1$1$2$FC/AP
+attack$0$1$1$3$FC/AP
+prop$spawn$金苹果 这是一个用于测试的道具$G
+prop$give$0$1$3
+prop$spawn$金苹果 这是一个用于测试的道具$C
+prop$give$0$0$1
+prop$use$1$0$1
+prop$use$0$0$2
+prop$spawn$金苹果 这是一个用于测试的道具$A
+prop$give$0$1$3
+prop$use$0
+attack$1$3$0$0$V
+attack$1$3$0$0$FC/AP
+attack$1$3$0$0$FC/AP
+attack$1$3$0$0$A
+prop$spawn$金苹果 这是一个用于测试的道具$G
+prop$give$0$1$3
+prop$use$0$0$1
+attack$1$3$0$1$FC/AP

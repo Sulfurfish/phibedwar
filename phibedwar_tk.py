@@ -33,6 +33,7 @@ class GameState:
         self.team_count = 0
         self.silenced_teams = []
         self.weakened_members = []
+        self.has_entered_death_race = False
         self._load_from_log()
 
     def _load_from_log(self):
@@ -54,6 +55,7 @@ class GameState:
         self.state = 'start'
         self.team_count = 0
         self.joined_teams.clear()
+        self.has_entered_death_race = False
 
         for line in lines:
             line = line.strip()
@@ -99,6 +101,7 @@ class GameState:
                 damage = base_damage * times
                 self._apply_damage(t_team, t_mem, damage)
             elif cmd == 'death_race':
+                self.has_entered_death_race = True
                 self.state = 'death_race'
                 for i in range(len(self.lives)):
                     for j in range(4):
@@ -255,6 +258,7 @@ class Application(tk.Tk):
         self.style = ttk.Style()
         self.style.configure('Cards.TFrame', background='#f0f0f0')
         self.style.theme_use('clam')
+        self.style.configure('Blue.Horizontal.TProgressbar', background='#87CEEB')  # 淡蓝色
         self.style.configure('TLabel', font=('微软雅黑', 12))          # 从10改为12
         self.style.configure('TButton', font=('微软雅黑', 12), padding=6)  # 从10改为12
         self.style.configure('Header.TLabel', font=('微软雅黑', 16, 'bold')) # 从14改为16
@@ -324,7 +328,8 @@ class Application(tk.Tk):
 2.力量药水:添加到使用者名字上,红色；
 3.盾牌+力量药水混合:添加到使用者名字上,紫色；
 4.虚弱药水:添加到被使用者的歌曲名字上,橙色；
-5.蜘蛛网:考虑到禁言操作在群内实现,故不显示颜色,仅在log.txt文件中进行登记。"""
+5.蜘蛛网:考虑到禁言操作在群内实现,故不显示颜色,仅在log.txt文件中进行登记。
+6.tip:伤害药水可以无视盾的存在,但不会破盾"""
         note_label = ttk.Label(self.team_frame, text=color_note, wraplength=200, justify='left')
         btn_frame.pack(side='top', fill='x', pady=5)
         note_label.pack(side='top', fill='x', padx=10, pady=5)
@@ -558,7 +563,10 @@ RKS16.70-16.99:定数14.0-14.4 """
             # 显示床信息
             if self.state.lives[idx][0] > 0:
                 bed_hp = self.state.lives[idx][0]
-                bed_max = 20 if self.state.state != 'death_race' else 5
+                if self.state.state == 'end':
+                    bed_max = 5 if self.state.has_entered_death_race else 20
+                else:
+                    bed_max = 20 if self.state.state != 'death_race' else 5
                 bed_percent = max(0, bed_hp) / bed_max if bed_max > 0 else 0
 
                 # 床血量标签
@@ -580,17 +588,16 @@ RKS16.70-16.99:定数14.0-14.4 """
             for m in range(1, 4):
                 current_row = row_offset + m - 1
                 hp = self.state.lives[idx][m]
-                max_hp = 5 if self.state.state == 'death_race' else (10 if self.state.bed_broken[idx] else 5)
+                if self.state.state == 'end':
+                    max_hp = 5 if self.state.has_entered_death_race else (10 if self.state.bed_broken[idx] else 5)
+                else:
+                    max_hp = 5 if self.state.state == 'death_race' else (10 if self.state.bed_broken[idx] else 5)
                 
                 # 名字标签（带效果颜色）
                 name_label = ttk.Label(card, text=team[m])
                 effect_val = self.state.effect[idx][m]
-                if effect_val % 6 == 0:
-                    name_label.config(foreground='purple')   # 力量+盾牌
-                elif effect_val % 2 == 0:
-                    name_label.config(foreground='red')     # 力量药水
-                elif effect_val % 3 == 0:
-                    name_label.config(foreground='brown')    # 盾牌
+                if effect_val % 2 == 0:
+                    name_label.config(foreground='brown')   # 力量药水
                 name_label.grid(row=current_row, column=0, sticky='w', padx=(10,0), pady=2)
                 
                 if hp <= -10000:
@@ -600,10 +607,16 @@ RKS16.70-16.99:定数14.0-14.4 """
                     ttk.Label(card, text='倒地').grid(row=current_row, column=1, columnspan=2, sticky='w', padx=5)
                 else:
                     # 血条
+                    # 根据效果值判断是否有盾牌（能被3整除）
+                    if self.state.effect[idx][m] % 3 == 0:
+                        bar_style = 'Blue.Horizontal.TProgressbar'
+                    else:
+                        bar_style = 'Red.Horizontal.TProgressbar'
+
                     bar = ttk.Progressbar(card, length=80, mode='determinate',
-                                        style='Red.Horizontal.TProgressbar')
+                                        style=bar_style)
                     bar['value'] = (max(0, hp) / max_hp) * 100 if max_hp > 0 else 0
-                    bar.grid(row=current_row, column=1, padx=5, pady=2, sticky='ew')
+                    bar.grid(row=current_row, column=1, padx=5, pady=2, sticky='ew')    
                     # 血量数值
                     ttk.Label(card, text=f'{hp}/{max_hp}').grid(row=current_row, column=2, padx=(5,10), pady=2, sticky='w')
                 
@@ -809,6 +822,9 @@ RKS16.70-16.99:定数14.0-14.4 """
             #死亡判定
             if self.state.lives[a_team][a_mem] <= -10000:
                 messagebox.showerror('错误', '攻击者已被淘汰，无法攻击')
+                return
+            if self.state.lives[t_team][t_mem] <= -10000:
+                messagebox.showerror('错误', "无法攻击被淘汰的目标")
                 return
             #攻击己方人员判定
             if a_team == t_team:
