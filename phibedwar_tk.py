@@ -1250,7 +1250,7 @@ RKS16.70-16.99:定数14.0-14.4 """
         幻冰cube             逐月nameless
         Project_Ekei         夏浪
     联系我们:bilibili上搜索“硫鱼君说Sulfurfish”视频发布者后私信即可
-    版本:v2.0.0
+    版本:v2.0.1
     日期:2025-03-14"""
         self.info_text.insert('1.0', sample_text)
         self.info_text.config(state='disabled')
